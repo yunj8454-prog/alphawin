@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Andrea Alpha</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+:root {
+  --bg-0: #06080d;
+  --bg-1: #0c1018;
+  --bg-2: #121825;
+  --bg-3: #1a2235;
+  --bg-4: #222d42;
+  --border: #1e2a3e;
+  --border-h: #2a3a54;
+  --t1: #edf2f7;
+  --t2: #a0aec0;
+  --t3: #5a6a80;
+  --blue: #4a9eff;
+  --blue-d: #4a9eff18;
+  --green: #00d4a1;
+  --green-d: #00d4a118;
+  --red: #ff5263;
+  --red-d: #ff526318;
+  --amber: #ffb020;
+  --amber-d: #ffb02018;
+  --purple: #9f7aea;
+  --cyan: #22d3ee;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Outfit', sans-serif;
+  --r: 6px;
+  --r2: 10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg-0);color:var(--t1);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden;height:100vh}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg-4);border-radius:3px}
+input,select,textarea,button{font-family:inherit}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 8px var(--blue-d)}50%{box-shadow:0 0 16px var(--blue)40}}
+
+.fade-up{animation:fadeUp .3s ease-out}
+.spin{width:14px;height:14px;border:2px solid var(--bg-4);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+
+/* Layout */
+.app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:1fr 380px;height:100vh;overflow:hidden}
+.app.chat-closed{grid-template-columns:1fr 0px}
+.header{grid-column:1/-1;background:var(--bg-1);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
+.main{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-panel{background:var(--bg-1);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .3s}
+
+/* Header */
+.logo{font-family:var(--mono);font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;letter-spacing:-.5px}
+.logo-mark{width:26px;height:26px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+.h-right{display:flex;align-items:center;gap:12px;font-size:11px;font-family:var(--mono);color:var(--t3)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;margin-right:3px;display:inline-block}
+
+/* Nav */
+.nav{display:flex;gap:1px;padding:0 0 0 0;overflow-x:auto;background:var(--bg-1);border-bottom:1px solid var(--border);flex-shrink:0}
+.nav-btn{padding:9px 14px;font-size:11px;font-weight:500;color:var(--t3);cursor:pointer;border:none;background:none;white-space:nowrap;border-bottom:2px solid transparent;font-family:var(--sans);letter-spacing:.2px;transition:all .15s}
+.nav-btn:hover{color:var(--t2)}
+.nav-btn.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+/* Cards */
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:border-color .2s}
+.card:hover{border-color:var(--border-h)}
+.card-t{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;font-family:var(--mono);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* Stat */
+.stat{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:14px}
+.stat-l{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);margin-bottom:4px}
+.stat-v{font-size:20px;font-weight:700;font-family:var(--mono);letter-spacing:-.5px}
+.stat-c{font-size:11px;font-family:var(--mono);margin-top:2px}
+
+.up{color:var(--green)}.dn{color:var(--red)}.nt{color:var(--amber)}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 10px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl td{padding:10px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;white-space:nowrap}
+.tbl tr:hover td{background:var(--bg-3)}
+
+/* Buttons */
+.btn{padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--bg-2);color:var(--t2);font-family:var(--sans);transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--bg-3);border-color:var(--border-h)}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-p:hover{background:#3a8eef}
+.btn-d{color:var(--red)}.btn-d:hover{background:var(--red-d);border-color:var(--red)}
+.btn-s{padding:4px 9px;font-size:10px}
+
+/* Badge */
+.badge{display:inline-flex;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;font-family:var(--mono);letter-spacing:.2px}
+.b-buy{background:var(--green-d);color:var(--green)}
+.b-sell{background:var(--red-d);color:var(--red)}
+.b-hold{background:var(--amber-d);color:var(--amber)}
+.b-add{background:var(--blue-d);color:var(--blue)}
+.b-bull{background:var(--green-d);color:var(--green)}
+.b-bear{background:var(--red-d);color:var(--red)}
+.b-neut{background:var(--amber-d);color:var(--amber)}
+
+/* Input */
+.inp{padding:7px 10px;background:var(--bg-0);border:1px solid var(--border);border-radius:var(--r);color:var(--t1);font-size:12px;font-family:var(--mono);transition:border-color .2s;width:100%}
+.inp:focus{outline:none;border-color:var(--blue)}
+.inp::placeholder{color:var(--t3)}
+.inp-l{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;font-family:var(--mono);margin-bottom:3px}
+
+/* Progress */
+.prog{height:5px;background:var(--bg-0);border-radius:3px;overflow:hidden}
+.prog-f{height:100%;border-radius:3px;transition:width .5s}
+
+/* Alloc bar */
+.alloc{display:flex;height:22px;border-radius:4px;overflow:hidden;gap:1px}
+.alloc-s{transition:width .4s;min-width:2px}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;width:90%;max-width:440px;animation:fadeUp .2s}
+.modal-t{font-size:15px;font-weight:600;margin-bottom:14px}
+
+/* Chat */
+.chat-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.chat-head-t{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.chat-input{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.msg{max-width:92%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;animation:fadeUp .2s}
+.msg-u{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:4px}
+.msg-a{align-self:flex-start;background:var(--bg-3);color:var(--t1);border-bottom-left-radius:4px}
+.msg-a pre{font-family:var(--mono);font-size:11px;background:var(--bg-0);padding:8px;border-radius:4px;margin-top:6px;overflow-x:auto;white-space:pre-wrap}
+.msg-loading{align-self:flex-start;background:var(--bg-3);padding:12px 18px;border-radius:12px;border-bottom-left-radius:4px}
+.msg-loading .spin{width:12px;height:12px}
+
+/* Chart */
+.mini-chart{display:flex;align-items:flex-end;gap:2px;height:60px;padding-top:4px}
+.mini-bar{flex:1;border-radius:2px 2px 0 0;transition:height .3s;min-width:3px}
+
+/* Alert */
+.alert{padding:10px 14px;border-radius:var(--r);font-size:12px;display:flex;align-items:flex-start;gap:8px}
+.alert-i{background:var(--blue-d);border:1px solid #4a9eff20;color:var(--blue)}
+.alert-w{background:var(--amber-d);border:1px solid #ffb02020;color:var(--amber)}
+.alert-s{background:var(--green-d);border:1px solid #00d4a120;color:var(--green)}
+
+/* Scenario */
+.scen{border-radius:var(--r);padding:14px;border:1px solid var(--border)}
+.scen-best{background:linear-gradient(135deg,#00d4a108,#00d4a112);border-color:#00d4a125}
+.scen-base{background:linear-gradient(135deg,#4a9eff08,#4a9eff12);border-color:#4a9eff25}
+.scen-worst{background:linear-gradient(135deg,#ff526308,#ff526312);border-color:#ff526325}
+
+/* Decision card */
+.dec-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;position:relative;overflow:hidden}
+.dec-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.dec-buy::before{background:var(--green)}
+.dec-sell::before{background:var(--red)}
+.dec-hold::before{background:var(--amber)}
+.dec-add::before{background:var(--blue)}
+
+/* Risk gauge */
+.gauge{width:100%;height:6px;background:linear-gradient(to right,var(--green),var(--amber),var(--red));border-radius:3px;position:relative;margin:6px 0}
+.gauge-m{width:10px;height:10px;background:#fff;border-radius:50%;position:absolute;top:-2px;transform:translateX(-50%);box-shadow:0 0 4px rgba(0,0,0,.5);transition:left .4s}
+
+/* Setup */
+.setup{max-width:480px;margin:80px auto;padding:0 20px}
+
+/* Heatmap */
+.heat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.heat-cell{padding:10px 8px;border-radius:var(--r);text-align:center;font-family:var(--mono);font-size:11px;transition:transform .15s}
+.heat-cell:hover{transform:scale(1.05)}
+
+/* Responsive */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr !important}
+  .chat-panel{position:fixed;right:0;top:48px;bottom:0;width:100%;z-index:50;display:none}
+  .chat-panel.open{display:flex}
+  .g4{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .main{padding:10px}
+}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:12px 0}
+
+/* Toggle */
+.chat-toggle{padding:6px 10px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--bg-2);color:var(--t2);border-radius:var(--r);font-family:var(--sans);display:flex;align-items:center;gap:4px;transition:all .15s}
+.chat-toggle:hover{border-color:var(--blue);color:var(--blue)}
+.chat-toggle.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback} = React;
+
+// ── Utils ──
+const f=(n,d=2)=>{if(n==null||isNaN(n))return'—';return Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})};
+const fp=(n)=>{if(n==null||isNaN(n))return'—';return(n>=0?'+':'')+f(n)+'%'};
+const fd=(n)=>{if(n==null||isNaN(n))return'—';return'$'+f(n)};
+const fl=(n)=>{if(n==null||isNaN(n))return'—';if(Math.abs(n)>=1e6)return'$'+f(n/1e6)+'M';if(Math.abs(n)>=1e3)return'$'+f(n/1e3,1)+'K';return'$'+f(n)};
+const colors=['#4a9eff','#00d4a1','#ffb020','#ff5263','#9f7aea','#22d3ee','#ec4899','#f97316','#14b8a6','#a855f7'];
+
+const TABS=[
+  {id:'dash',l:'대시보드'},{id:'monitor',l:'모니터'},{id:'strategy',l:'전략'},{id:'scan',l:'매매기회'},
+  {id:'sentiment',l:'감성분석'},{id:'risk',l:'리스크'},{id:'brief',l:'브리핑'},
+  {id:'scenario',l:'시나리오'},{id:'decision',l:'판단'},{id:'trades',l:'매매기록'},{id:'config',l:'설정'}
+];
+
+// ── API ──
+const API={
+  async quote(tk,key){
+    try{const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${tk}&token=${key}`);const d=await r.json();
+    if(d&&d.c>0)return{cur:d.c,pc:d.pc,h:d.h,l:d.l,o:d.o,dp:d.dp,d:d.d};return null}catch{return null}},
+
+  async quotes(tks,key){
+    const res={};for(let i=0;i<tks.length;i++){const d=await API.quote(tks[i],key);if(d)res[tks[i]]=d;
+    if(i<tks.length-1)await new Promise(r=>setTimeout(r,250))}return res},
+
+  async candle(tk,key){
+    try{const now=Math.floor(Date.now()/1000);const wa=now-7*86400;
+    const r=await fetch(`https://finnhub.io/api/v1/stock/candle?symbol=${tk}&resolution=D&from=${wa}&to=${now}&token=${key}`);
+    const d=await r.json();if(d&&d.s==='ok')return{c:d.c||[],h:d.h||[],l:d.l||[],o:d.o||[],v:d.v||[],t:d.t||[]};return null}catch{return null}},
+
+  async news(tk,key){
+    try{const t=new Date().toISOString().split('T')[0];const w=new Date(Date.now()-7*864e5).toISOString().split('T')[0];
+    const r=await fetch(`https://finnhub.io/api/v1/company-news?symbol=${tk}&from=${w}&to=${t}&token=${key}`);
+    const d=await r.json();return Array.isArray(d)?d.slice(0,10):[]}catch{return[]}},
+
+  async claude(prompt,key){
+    try{const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();return d.content?.[0]?.text||null}catch{return null}},
+
+  async chat(messages,portfolio,key){
+    const ctx=portfolio.length>0?`\n현재 포트폴리오:\n${portfolio.map(p=>`${p.ticker}: 현재가$${p.cur||0}, 매수가$${p.avg}, ${p.qty}주, 손익${((p.cur-p.avg)/p.avg*100).toFixed(1)}%`).join('\n')}`:'';
+    const sys=`당신은 Andrea Alpha의 AI 투자 어드바이저입니다. 한국어로 답변하세요. 간결하고 실행 가능한 조언을 제공합니다. 숫자와 근거를 포함하세요.${ctx}`;
+    const msgs=[{role:'user',content:sys+'\n\n'+messages[messages.length-1].content}];
+    return await API.claude(msgs[0].content,key)},
+
+  async strategy(pos,key){
+    const p=`주식 분석 후 JSON만 응답:\n종목:${pos.ticker} 현재가:$${pos.cur} 매수가:$${pos.avg} 수량:${pos.qty} 전일종가:$${pos.pc}\n\n{"action":"HOLD/ADD/PARTIAL SELL/FULL SELL","confidence":75,"momentum":"강/보통/약/음","trend":"상승/하락/횡보","support":0,"resistance":0,"stopLoss":0,"takeProfit":0,"rr":"1.5","reason":"한국어 2문장 설명"}`;
+    const r=await API.claude(p,key);if(r){try{return JSON.parse(r.replace(/```json|```/g,'').trim())}catch{}}return null},
+
+  async sentimentAI(tk,headlines,key){
+    if(!headlines?.length)return null;
+    const hl=headlines.map((h,i)=>`${i+1}. ${h.headline||h}`).join('\n');
+    const p=`${tk} 뉴스 감성분석 후 JSON만 응답:\n${hl}\n\n{"sentiment":"Bullish/Neutral/Bearish","score":75,"impact":"한국어 2~3문장 영향분석"}`;
+    const r=await API.claude(p,key);if(r){try{return JSON.parse(r.replace(/```json|```/g,'').trim())}catch{}}return null},
+
+  async scanAI(key){
+    const p=`오늘의 상위 5개 주식 매수 기회를 JSON 배열로만 응답:\n[{"ticker":"심볼","entry":0,"target":0,"stopLoss":0,"rr":"1.5","confidence":75,"reason":"한국어 1문장","sector":"섹터"}]`;
+    const r=await API.claude(p,key);if(r){try{return JSON.parse(r.replace(/```json|```/g,'').trim())}catch{}}return null},
+
+  async briefAI(portfolio,key){
+    const pos=portfolio.map(p=>`${p.ticker}: $${p.cur}, ${p.qty}주`).join(', ');
+    const p=`포트폴리오 일일 브리핑 JSON만 응답:\n보유: ${pos}\n\n{"trend":"Bullish/Bearish","strong":"강세섹터","weak":"약세섹터","tips":["한국어 제안1","제안2","제안3"]}`;
+    const r=await API.claude(p,key);if(r){try{return JSON.parse(r.replace(/```json|```/g,'').trim())}catch{}}return null}
+};
+
+// ── Demo Data ──
+const DEMO=[
+  {ticker:'AAPL',qty:50,avg:178.5,cur:192.34,pc:190.12,h:193.5,l:189.8,o:190,dp:1.17,d:2.22,vol:54200000},
+  {ticker:'NVDA',qty:30,avg:480,cur:875.5,pc:862.3,h:880.2,l:858.1,o:863,dp:1.53,d:13.2,vol:42100000},
+  {ticker:'MSFT',qty:25,avg:340.2,cur:415.8,pc:412.5,h:417.3,l:410.9,o:413,dp:0.8,d:3.3,vol:22300000},
+  {ticker:'GOOGL',qty:40,avg:138,cur:172.45,pc:170.8,h:173.6,l:169.5,o:171,dp:0.97,d:1.65,vol:18700000},
+  {ticker:'AMZN',qty:35,avg:145.8,cur:186.2,pc:184.5,h:187.8,l:183.2,o:185,dp:0.92,d:1.7,vol:35600000},
+  {ticker:'META',qty:20,avg:320,cur:505.6,pc:498.3,h:508.9,l:495.1,o:499,dp:1.46,d:7.3,vol:16800000}
+];
+
+// ── Components ──
+
+function Setup({onSubmit}){
+  const [keys,setKeys]=useState(()=>{try{const s=localStorage.getItem('aa_keys');return s?JSON.parse(s):{fh:'',cl:''}}catch{return{fh:'',cl:''}}});
+  const has=keys.fh||keys.cl;
+  const save=()=>{localStorage.setItem('aa_keys',JSON.stringify(keys));onSubmit(keys)};
+  const del=()=>{if(confirm('저장된 키를 삭제하시겠습니까?')){localStorage.removeItem('aa_keys');setKeys({fh:'',cl:''})}};
+  return(
+    <div className="setup fade-up">
+      <div style={{textAlign:'center',marginBottom:28}}>
+        <div className="logo-mark" style={{width:44,height:44,fontSize:20,margin:'0 auto 14px'}}>◆</div>
+        <h2 style={{fontSize:20,fontWeight:600}}>Andrea Alpha</h2>
+        <p style={{color:'var(--t2)',fontSize:13,marginTop:6}}>AI 기반 기관급 투자 분석 터미널</p>
+      </div>
+      <div className="card">
+        <div className="card-t">API 설정</div>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          <div><div className="inp-l">Finnhub API Key (주가/뉴스)</div>
+          <input className="inp" type="password" placeholder="Finnhub 키 입력" value={keys.fh} onChange={e=>setKeys({...keys,fh:e.target.value})}/></div>
+          <div><div className="inp-l">Claude API Key (AI 분석)</div>
+          <input className="inp" type="password" placeholder="sk-ant-..." value={keys.cl} onChange={e=>setKeys({...keys,cl:e.target.value})}/></div>
+          <div style={{display:'flex',gap:6,marginTop:6}}>
+            <button className="btn btn-p" style={{flex:1}} onClick={save}>저장 및 시작</button>
+            <button className="btn" style={{flex:1}} onClick={()=>onSubmit({demo:true})}>데모</button>
+          </div>
+          {has&&<button className="btn btn-d btn-s" style={{alignSelf:'center'}} onClick={del}>키 삭제</button>}
+          <p style={{fontSize:10,color:'var(--t3)',textAlign:'center'}}>키는 이 기기에만 저장됩니다</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddModal({onAdd,onClose,fhKey}){
+  const [tk,setTk]=useState('');const [qt,setQt]=useState('');const [av,setAv]=useState('');
+  const [busy,setBusy]=useState(false);const [err,setErr]=useState('');
+  const go=async()=>{
+    if(!tk||!qt||!av)return;setBusy(true);setErr('');
+    let q=null;if(fhKey)q=await API.quote(tk.toUpperCase(),fhKey);
+    if(q){onAdd({ticker:tk.toUpperCase(),qty:+qt,avg:+av,cur:q.c,pc:q.pc,h:q.h,l:q.l,o:q.o,dp:q.dp||0,d:q.d||0,vol:0});onClose()}
+    else{onAdd({ticker:tk.toUpperCase(),qty:+qt,avg:+av,cur:+av,pc:+av,h:+av,l:+av,o:+av,dp:0,d:0,vol:0});
+    setErr('가격 조회 실패 — 매수가로 등록. 새로고침 시 업데이트');setTimeout(onClose,1200)}setBusy(false)};
+  return(
+    <div className="modal-bg" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()}>
+      <div className="modal-t">종목 추가</div>
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
+        <div><div className="inp-l">티커</div><input className="inp" placeholder="AAPL" value={tk} onChange={e=>setTk(e.target.value)} autoFocus/></div>
+        <div><div className="inp-l">수량</div><input className="inp" type="number" placeholder="100" value={qt} onChange={e=>setQt(e.target.value)}/></div>
+        <div><div className="inp-l">매수가 ($)</div><input className="inp" type="number" step="0.01" placeholder="150.00" value={av} onChange={e=>setAv(e.target.value)}/></div>
+        <div style={{display:'flex',gap:6,marginTop:4}}>
+          <button className="btn btn-p" style={{flex:1}} onClick={go} disabled={busy}>{busy?<><span className="spin"/>조회중</>:'추가'}</button>
+          <button className="btn" onClick={onClose}>취소</button>
+        </div>
+        {err&&<div className="alert alert-w"><span>⚠</span>{err}</div>}
+      </div>
+    </div></div>
+  );
+}
+
+// ── Mini Chart ──
+function MiniChart({data,color='var(--blue)'}){
+  if(!data||data.length===0)return null;
+  const max=Math.max(...data);const min=Math.min(...data);const range=max-min||1;
+  return(<div className="mini-chart">{data.map((v,i)=>{
+    const h=Math.max(8,((v-min)/range)*56);
+    const c=i>0&&data[i]>=data[i-1]?'var(--green)':'var(--red)';
+    return <div key={i} className="mini-bar" style={{height:h,background:i===data.length-1?color:c+'60'}}/>
+  })}</div>);
+}
+
+// ── AI Chat Panel ──
+function ChatPanel({keys,portfolio,onClose,savedMsgs,onMsgsChange}){
+  const [msgs,setMsgs]=useState(savedMsgs||[{role:'a',text:'안녕하세요! Andrea Alpha AI입니다. 포트폴리오에 대해 무엇이든 물어보세요.\n\n예시:\n• "NVDA 지금 팔아야 할까?"\n• "포트폴리오 리밸런싱 해줘"\n• "반도체 섹터 전망은?"'}]);
+  const [input,setInput]=useState('');const [loading,setLoading]=useState(false);
+  const endRef=useRef(null);
+  useEffect(()=>{endRef.current?.scrollIntoView({behavior:'smooth'})},[msgs]);
+  useEffect(()=>{if(onMsgsChange)onMsgsChange(msgs)},[msgs]);
+
+  const send=async()=>{
+    if(!input.trim()||loading)return;
+    const userMsg=input.trim();setInput('');
+    setMsgs(p=>[...p,{role:'u',text:userMsg}]);setLoading(true);
+    if(keys.demo||!keys.cl){
+      setTimeout(()=>{setMsgs(p=>[...p,{role:'a',text:'데모 모드에서는 AI 분석을 사용할 수 없습니다. Claude API 키를 설정해주세요.'}]);setLoading(false)},800);return}
+    const res=await API.chat([{role:'user',content:userMsg}],portfolio,keys.cl);
+    setMsgs(p=>[...p,{role:'a',text:res||'응답을 받지 못했습니다. 다시 시도해주세요.'}]);setLoading(false)};
+
+  return(
+    <div className="chat-panel open">
+      <div className="chat-head">
+        <div className="chat-head-t"><span style={{fontSize:16}}>🤖</span> AI 어드바이저</div>
+        <button className="btn btn-s" onClick={onClose}>✕</button>
+      </div>
+      <div className="chat-msgs">
+        {msgs.map((m,i)=><div key={i} className={`msg ${m.role==='u'?'msg-u':'msg-a'}`}>{m.role==='a'?<div style={{whiteSpace:'pre-wrap'}}>{m.text}</div>:m.text}</div>)}
+        {loading&&<div className="msg-loading"><span className="spin"/></div>}
+        <div ref={endRef}/>
+      </div>
+      <div className="chat-input">
+        <input className="inp" style={{flex:1}} placeholder="질문을 입력하세요..." value={input} onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>{if(e.key==='Enter')send()}}/>
+        <button className="btn btn-p" onClick={send} disabled={loading}>전송</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard ──
+function Dash({pf,setAdd,remove,refresh,rfing,lastRf,demo}){
+  const tv=pf.reduce((s,p)=>s+p.cur*p.qty,0);
+  const tc=pf.reduce((s,p)=>s+p.avg*p.qty,0);
+  const pnl=tv-tc;const pnlP=tc?pnl/tc*100:0;
+  const dPnl=pf.reduce((s,p)=>s+(p.cur-p.pc)*p.qty,0);
+  const dP=tv-dPnl?dPnl/(tv-dPnl)*100:0;
+
+  if(pf.length===0)return(
+    <div className="fade-up" style={{textAlign:'center',padding:'60px 20px',color:'var(--t3)'}}>
+      <div style={{fontSize:36,marginBottom:12,opacity:.4}}>📊</div>
+      <div style={{fontSize:14,marginBottom:6}}>보유 종목이 없습니다</div>
+      <div style={{fontSize:12,marginBottom:16}}>종목을 추가하여 포트폴리오를 구성하세요</div>
+      <button className="btn btn-p" onClick={()=>setAdd(true)}>+ 종목 추가</button>
+    </div>
+  );
+
+  return(
+    <div className="fade-up" style={{display:'flex',flexDirection:'column',gap:12}}>
+      <div className="g4">
+        <div className="stat"><div className="stat-l">총 평가액</div><div className="stat-v">{fl(tv)}</div></div>
+        <div className="stat"><div className="stat-l">총 손익</div><div className={`stat-v ${pnl>=0?'up':'dn'}`}>{fd(pnl)}</div><div className={`stat-c ${pnl>=0?'up':'dn'}`}>{fp(pnlP)}</div></div>
+        <div className="stat"><div className="stat-l">일일 손익</div><div className={`stat-v ${dPnl>=0?'up':'dn'}`}>{fd(dPnl)}</div><div className={`stat-c ${dPnl>=0?'up':'dn'}`}>{fp(dP)}</div></div>
+        <div className="stat"><div className="stat-l">보유 종목</div><div className="stat-v">{pf.length}</div></div>
+      </div>
+
+      <div className="g2">
+        <div className="card"><div className="card-t">종목 배분</div>
+          <div className="alloc" style={{marginBottom:10}}>{pf.map((p,i)=>{const w=p.cur*p.qty/tv*100;return<div key={p.ticker} className="alloc-s" style={{width:w+'%',background:colors[i%colors.length]}} title={`${p.ticker}: ${f(w,1)}%`}/>})}</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:'4px 14px'}}>{pf.map((p,i)=><div key={p.ticker} style={{display:'flex',alignItems:'center',gap:5,fontSize:11,fontFamily:'var(--mono)'}}><div style={{width:7,height:7,borderRadius:2,background:colors[i%colors.length]}}/><span style={{color:'var(--t2)'}}>{p.ticker}</span><span style={{color:'var(--t3)'}}>{f(p.cur*p.qty/tv*100,1)}%</span></div>)}</div>
+        </div>
+        <div className="card"><div className="card-t">포트폴리오 지표</div>
+          <div style={{display:'flex',flexDirection:'column',gap:10,fontSize:12}}>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--t3)'}}>총 매수원가</span><span style={{fontFamily:'var(--mono)'}}>{fl(tc)}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--t3)'}}>최대 보유</span><span style={{fontFamily:'var(--mono)'}}>{pf.reduce((m,p)=>p.cur*p.qty>m.cur*m.qty?p:m).ticker}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--t3)'}}>최고 수익</span><span className="up" style={{fontFamily:'var(--mono)'}}>{pf.reduce((m,p)=>(p.cur-p.avg)/p.avg>(m.cur-m.avg)/m.avg?p:m).ticker}</span></div>
+            <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--t3)'}}>평균 포지션</span><span style={{fontFamily:'var(--mono)'}}>{fl(tv/pf.length)}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-t">
+          <span>보유 종목</span>
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            {lastRf&&<span style={{fontSize:9,color:'var(--t3)',fontFamily:'var(--mono)'}}>갱신: {lastRf.toLocaleTimeString('ko-KR')}</span>}
+            {!demo&&<button className="btn btn-s" onClick={refresh} disabled={rfing}>{rfing?<><span className="spin"/>조회중</>:'⟳ 새로고침'}</button>}
+            <button className="btn btn-p btn-s" onClick={()=>setAdd(true)}>+ 추가</button>
+          </div>
+        </div>
+        <div style={{overflowX:'auto'}}>
+          <table className="tbl"><thead><tr><th>티커</th><th>수량</th><th>매수가</th><th>현재가</th><th>평가액</th><th>손익</th><th>수익률</th><th>일일</th><th>비중</th><th></th></tr></thead>
+          <tbody>{pf.map(p=>{const v=p.cur*p.qty;const pnl=(p.cur-p.avg)*p.qty;const pp=(p.cur-p.avg)/p.avg*100;const dp=p.pc?(p.cur-p.pc)/p.pc*100:0;const al=v/tv*100;
+            return(<tr key={p.ticker}><td style={{fontWeight:600,color:'var(--t1)'}}>{p.ticker}</td><td>{p.qty}</td><td>{fd(p.avg)}</td><td>{fd(p.cur)}</td><td>{fl(v)}</td>
+              <td className={pnl>=0?'up':'dn'}>{fd(pnl)}</td><td className={pp>=0?'up':'dn'}>{fp(pp)}</td><td className={dp>=0?'up':'dn'}>{fp(dp)}</td>
+              <td><div style={{display:'flex',alignItems:'center',gap:6}}><div className="prog" style={{width:50}}><div className="prog-f" style={{width:al+'%',background:'var(--blue)'}}/></div><span style={{fontSize:10}}>{f(al,1)}%</span></div></td>
+              <td><button className="btn btn-d btn-s" onClick={()=>remove(p.ticker)} style={{padding:'2px 6px',fontSize:10}}>✕</button></td></tr>)})}</tbody></table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Monitor ──
+function Monitor({pf}){
+  return(<div className="fade-up"><div className="g2">{pf.map(p=>{
+    const dp=p.pc?(p.cur-p.pc)/p.pc*100:0;const sup=p.cur*.95;const res=p.cur*1.08;const sl=p.cur*.92;const tp=p.cur*1.15;
+    return(<div className="card" key={p.ticker}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div><span style={{fontSize:15,fontWeight:700,fontFamily:'var(--mono)'}}>{p.ticker}</span><span style={{fontSize:18,fontWeight:700,fontFamily:'var(--mono)',marginLeft:10}}>{fd(p.cur)}</span><span className={`stat-c ${dp>=0?'up':'dn'}`} style={{marginLeft:6}}>{fp(dp)}</span></div>
+        <span className={`badge ${dp>=0?'b-bull':'b-bear'}`}>{dp>=0?'▲':'▼'}</span>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:8,fontSize:12}}>
+        <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--t3)'}}>일중 범위</span><span style={{fontFamily:'var(--mono)'}}>{fd(p.l)} — {fd(p.h)}</span></div>
+        <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--t3)'}}>전일 종가</span><span style={{fontFamily:'var(--mono)'}}>{fd(p.pc)}</span></div>
+        <div className="divider"/>
+        <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--green)',fontSize:10,fontFamily:'var(--mono)'}}>매수구간</span><span style={{fontFamily:'var(--mono)'}}>{fd(sup)}</span></div>
+        <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--blue)',fontSize:10,fontFamily:'var(--mono)'}}>익절목표</span><span style={{fontFamily:'var(--mono)'}}>{fd(tp)}</span></div>
+        <div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--red)',fontSize:10,fontFamily:'var(--mono)'}}>손절라인</span><span style={{fontFamily:'var(--mono)'}}>{fd(sl)}</span></div>
+      </div>
+    </div>)})}</div></div>);
+}
+
+// ── Strategy (uses local calc + optional AI) ──
+function Strategy({pf,aiStrats,analyze,aiLoad,demo}){
+  return(<div className="fade-up">{pf.map(p=>{
+    const pp=(p.cur-p.avg)/p.avg*100;const dp=p.pc?(p.cur-p.pc)/p.pc*100:0;
+    const ai=aiStrats[p.ticker];
+    const act=ai?.action||(pp>50?'PARTIAL SELL':pp<-10?'ADD':'HOLD');
+    const conf=ai?.confidence||(pp>30?78:pp<-10?65:70);
+    const sup=ai?.support||(p.cur*.95);const res=ai?.resistance||(p.cur*1.08);
+    const sl=ai?.stopLoss||(p.cur*.92);const tp=ai?.takeProfit||(p.cur*1.15);
+    const rr=ai?.rr||((tp-p.cur)/(p.cur-sl)).toFixed(1);
+    const reason=ai?.reason||null;
+    const bc=act.includes('SELL')?'b-sell':act==='ADD'?'b-add':'b-hold';
+    return(<div className="card" key={p.ticker} style={{marginBottom:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:15,fontWeight:700,fontFamily:'var(--mono)'}}>{p.ticker}</span>
+          <span className={`badge ${bc}`}>{act}</span>
+          {!demo&&<button className="btn btn-s" onClick={()=>analyze(p.ticker)} disabled={aiLoad[p.ticker]}>
+            {aiLoad[p.ticker]?<><span className="spin"/>분석중</>:'AI 분석'}</button>}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:4}}>
+          <span style={{fontSize:10,fontFamily:'var(--mono)',color:'var(--t3)'}}>신뢰도</span>
+          <div className="prog" style={{width:50}}><div className="prog-f" style={{width:conf+'%',background:conf>75?'var(--green)':conf>60?'var(--amber)':'var(--red)'}}/></div>
+          <span style={{fontSize:11,fontFamily:'var(--mono)',fontWeight:600}}>{conf}%</span>
+        </div>
+      </div>
+      <div className="g4">
+        <div style={{padding:'8px 10px',background:'var(--green-d)',borderRadius:'var(--r)'}}><div style={{fontSize:9,color:'var(--green)',fontFamily:'var(--mono)'}}>지지선</div><div style={{fontFamily:'var(--mono)',fontWeight:600,fontSize:13}}>{fd(sup)}</div></div>
+        <div style={{padding:'8px 10px',background:'var(--blue-d)',borderRadius:'var(--r)'}}><div style={{fontSize:9,color:'var(--blue)',fontFamily:'var(--mono)'}}>저항선</div><div style={{fontFamily:'var(--mono)',fontWeight:600,fontSize:13}}>{fd(res)}</div></div>
+        <div style={{padding:'8px 10px',background:'var(--purple)18',borderRadius:'var(--r)'}}><div style={{fontSize:9,color:'var(--purple)',fontFamily:'var(--mono)'}}>익절목표</div><div style={{fontFamily:'var(--mono)',fontWeight:600,fontSize:13}}>{fd(tp)}</div></div>
+        <div style={{padding:'8px 10px',background:'var(--red-d)',borderRadius:'var(--r)'}}><div style={{fontSize:9,color:'var(--red)',fontFamily:'var(--mono)'}}>손절라인</div><div style={{fontFamily:'var(--mono)',fontWeight:600,fontSize:13}}>{fd(sl)}</div></div>
+      </div>
+      {reason&&<div style={{marginTop:10,padding:10,background:'var(--bg-0)',borderRadius:'var(--r)',fontSize:12,color:'var(--t2)',lineHeight:1.6}}>{reason}</div>}
+    </div>)})}</div>);
+}
+
+// ── Scanner ──
+function Scanner({opps,scan,aiLoad,demo}){
+  const data=opps||[{ticker:'AMD',entry:168.5,target:195,stopLoss:155,rr:'1.96',confidence:82,reason:'AI 칩 수요 급증, 50일 이평선 돌파',sector:'반도체'},{ticker:'CRWD',entry:312,target:365,stopLoss:285,rr:'1.96',confidence:76,reason:'사이버보안 섹터 리더, 실적 서프라이즈',sector:'보안'},{ticker:'LLY',entry:780,target:900,stopLoss:720,rr:'2.00',confidence:79,reason:'GLP-1 파이프라인, FDA 긍정 전망',sector:'제약'},{ticker:'UBER',entry:72.5,target:88,stopLoss:65,rr:'2.07',confidence:71,reason:'자율주행 촉매, 흑자전환 가속',sector:'모빌리티'},{ticker:'COIN',entry:225,target:285,stopLoss:195,rr:'2.00',confidence:68,reason:'크립토 사이클 회복, 기관 도입 확대',sector:'핀테크'}];
+  return(<div className="fade-up">
+    <div className="card"><div className="card-t"><span>매매 기회 — 상위 5</span><div style={{display:'flex',gap:6}}>
+      {!demo&&<button className="btn btn-p btn-s" onClick={scan} disabled={aiLoad.scanner}>{aiLoad.scanner?<><span className="spin"/>스캔중</>:'AI 스캔'}</button>}
+      <span style={{fontSize:9,color:'var(--t3)',fontFamily:'var(--mono)'}}>{opps?'AI 완료':'데모'}</span></div></div>
+      <div style={{overflowX:'auto'}}><table className="tbl"><thead><tr><th>#</th><th>티커</th><th>섹터</th><th>진입</th><th>목표</th><th>손절</th><th>R:R</th><th>신뢰도</th><th>근거</th></tr></thead>
+      <tbody>{data.map((o,i)=><tr key={o.ticker}><td style={{fontWeight:700,color:'var(--amber)'}}>#{i+1}</td><td style={{fontWeight:700}}>{o.ticker}</td><td style={{color:'var(--t2)'}}>{o.sector}</td><td>{fd(o.entry)}</td><td className="up">{fd(o.target)}</td><td className="dn">{fd(o.stopLoss)}</td><td style={{color:'var(--cyan)'}}>1:{o.rr}</td>
+        <td><div style={{display:'flex',alignItems:'center',gap:4}}><div className="prog" style={{width:40}}><div className="prog-f" style={{width:o.confidence+'%',background:o.confidence>75?'var(--green)':'var(--amber)'}}/></div><span style={{fontSize:10}}>{o.confidence}%</span></div></td>
+        <td style={{maxWidth:200,whiteSpace:'normal',fontSize:11,color:'var(--t2)',lineHeight:1.4}}>{o.reason}</td></tr>)}</tbody></table></div>
+    </div>
+  </div>);
+}
+
+// ── Sentiment ──
+function Sentiment({pf,aiSent,analyze,aiLoad,demo}){
+  const [sel,setSel]=useState(pf[0]?.ticker||'');
+  const d=aiSent[sel]||{sentiment:'Neutral',score:50,headlines:[],impact:'AI 분석 버튼을 클릭하여 뉴스 감성을 분석하세요.'};
+  const isL=aiLoad[`s_${sel}`];
+  return(<div className="fade-up"><div className="card">
+    <div className="card-t"><span>AI 뉴스 감성 분석</span><div style={{display:'flex',gap:4}}>
+      {!demo&&<button className="btn btn-p btn-s" onClick={()=>analyze(sel)} disabled={isL}>{isL?<><span className="spin"/>분석중</>:'AI 분석'}</button>}
+      {pf.map(p=><button key={p.ticker} className={`btn btn-s ${sel===p.ticker?'btn-p':''}`} onClick={()=>setSel(p.ticker)}>{p.ticker}</button>)}</div></div>
+    <div className="g3" style={{marginBottom:14}}>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">감성</div><div className={`badge ${d.sentiment==='Bullish'?'b-bull':d.sentiment==='Bearish'?'b-bear':'b-neut'}`} style={{fontSize:13,padding:'5px 14px',marginTop:6}}>{d.sentiment==='Bullish'?'▲ 강세':d.sentiment==='Bearish'?'▼ 약세':'◆ 중립'}</div></div>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">점수</div><div className="stat-v" style={{color:d.score>60?'var(--green)':d.score>40?'var(--amber)':'var(--red)'}}>{d.score}</div><div style={{fontSize:10,color:'var(--t3)'}}>/ 100</div></div>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">기사 수</div><div className="stat-v">{d.headlines?.length||0}</div></div>
+    </div>
+    {d.headlines?.length>0&&<div style={{marginBottom:12}}><div className="inp-l" style={{marginBottom:6}}>주요 헤드라인</div>
+      {d.headlines.map((h,i)=><div key={i} style={{padding:'8px 10px',background:'var(--bg-0)',borderRadius:'var(--r)',marginBottom:4,fontSize:12,color:'var(--t2)',display:'flex',gap:8}}><span style={{color:'var(--blue)',fontFamily:'var(--mono)',fontSize:10}}>#{i+1}</span>{h}</div>)}</div>}
+    <div><div className="inp-l" style={{marginBottom:6}}>AI 영향 분석</div>
+      <div style={{padding:12,background:'var(--bg-0)',borderRadius:'var(--r)',fontSize:12,color:'var(--t2)',lineHeight:1.7}}>{d.impact}</div></div>
+  </div></div>);
+}
+
+// ── Risk ──
+function Risk({pf}){
+  const tv=pf.reduce((s,p)=>s+p.cur*p.qty,0);
+  const allocs=pf.map(p=>({tk:p.ticker,pct:p.cur*p.qty/tv*100}));
+  const maxA=Math.max(...allocs.map(a=>a.pct));
+  const conc=allocs.filter(a=>a.pct>20);
+  const riskLv=maxA>30?'높음':maxA>20?'보통':'낮음';
+  const riskS=maxA>30?75:maxA>20?50:25;
+  return(<div className="fade-up">
+    {conc.length>0&&<div className="alert alert-w" style={{marginBottom:12}}><span>⚠</span><span>집중도 경고: {conc.map(c=>`${c.tk} (${f(c.pct,1)}%)`).join(', ')} — 20% 한도 초과</span></div>}
+    <div className="g3" style={{marginBottom:12}}>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">위험도</div><div className={`badge ${riskLv==='높음'?'b-sell':riskLv==='보통'?'b-hold':'b-buy'}`} style={{fontSize:12,padding:'4px 12px',marginTop:6}}>{riskLv}</div><div className="gauge" style={{marginTop:8}}><div className="gauge-m" style={{left:riskS+'%'}}/></div></div>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">최대 비중</div><div className={`stat-v ${maxA>20?'dn':'up'}`}>{f(maxA,1)}%</div><div style={{fontSize:10,color:'var(--t3)'}}>한도 20%</div></div>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">손절 커버리지</div><div className="stat-v up">100%</div></div>
+    </div>
+    <div className="card"><div className="card-t">리스크 상세</div>
+      <table className="tbl"><thead><tr><th>티커</th><th>비중</th><th>상태</th><th>손절</th><th>최대손실</th><th>하락위험</th></tr></thead>
+      <tbody>{pf.map(p=>{const al=p.cur*p.qty/tv*100;const sl=p.cur*.92;const ml=(p.cur-sl)*p.qty;const ds=(sl-p.cur)/p.cur*100;
+        return(<tr key={p.ticker}><td style={{fontWeight:600}}>{p.ticker}</td><td><div style={{display:'flex',alignItems:'center',gap:6}}><div className="prog" style={{width:60}}><div className="prog-f" style={{width:Math.min(al,100)+'%',background:al>20?'var(--red)':'var(--green)'}}/></div><span className={al>20?'dn':''}>{f(al,1)}%</span></div></td>
+          <td><span className={`badge ${al>20?'b-sell':'b-buy'}`}>{al>20?'초과':'정상'}</span></td><td>{fd(sl)}</td><td className="dn">-{fd(ml)}</td><td className="dn">{f(ds,1)}%</td></tr>)})}</tbody></table>
+    </div>
+  </div>);
+}
+
+// ── Briefing ──
+function Brief({pf,aiBrief,generate,aiLoad,demo}){
+  const dPnl=pf.reduce((s,p)=>s+(p.cur-p.pc)*p.qty,0);
+  const gain=pf.filter(p=>p.cur>p.pc).sort((a,b)=>(b.cur-b.pc)/b.pc-(a.cur-a.pc)/a.pc);
+  const lose=pf.filter(p=>p.cur<=p.pc).sort((a,b)=>(a.cur-a.pc)/a.pc-(b.cur-b.pc)/b.pc);
+  return(<div className="fade-up"><div className="card">
+    <div className="card-t"><span>일일 브리핑</span><div style={{display:'flex',gap:6}}>
+      {!demo&&<button className="btn btn-p btn-s" onClick={generate} disabled={aiLoad.brief}>{aiLoad.brief?<><span className="spin"/>생성중</>:'AI 브리핑'}</button>}
+      <span style={{fontSize:9,color:'var(--t3)'}}>장 마감 후</span></div></div>
+    <div className="g3" style={{marginBottom:14}}>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">시장 추세</div><div className={`badge ${dPnl>0?'b-bull':'b-bear'}`} style={{fontSize:12,padding:'4px 12px',marginTop:6}}>{aiBrief?.trend==='Bullish'||dPnl>0?'▲ 강세':'▼ 약세'}</div></div>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">강세 섹터</div><div style={{fontFamily:'var(--mono)',fontSize:12,marginTop:6,color:'var(--green)'}}>{aiBrief?.strong||'기술, AI/반도체'}</div></div>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">약세 섹터</div><div style={{fontFamily:'var(--mono)',fontSize:12,marginTop:6,color:'var(--red)'}}>{aiBrief?.weak||'에너지, 유틸리티'}</div></div>
+    </div>
+    <div className="g2" style={{marginBottom:14}}>
+      <div><div className="inp-l" style={{marginBottom:6,color:'var(--green)'}}>오늘 상승</div>{gain.map(p=>{const d=(p.cur-p.pc)/p.pc*100;return<div key={p.ticker} style={{display:'flex',justifyContent:'space-between',padding:'6px 10px',background:'var(--green-d)',borderRadius:'var(--r)',marginBottom:3,fontFamily:'var(--mono)',fontSize:12}}><span style={{fontWeight:600}}>{p.ticker}</span><span className="up">{fp(d)}</span></div>})}</div>
+      <div><div className="inp-l" style={{marginBottom:6,color:'var(--red)'}}>오늘 하락</div>{lose.length>0?lose.map(p=>{const d=(p.cur-p.pc)/p.pc*100;return<div key={p.ticker} style={{display:'flex',justifyContent:'space-between',padding:'6px 10px',background:'var(--red-d)',borderRadius:'var(--r)',marginBottom:3,fontFamily:'var(--mono)',fontSize:12}}><span style={{fontWeight:600}}>{p.ticker}</span><span className="dn">{fp(d)}</span></div>}):<div style={{fontSize:12,color:'var(--t3)',padding:'6px 10px'}}>모든 종목 상승</div>}</div>
+    </div>
+    {aiBrief?.tips&&<div><div className="inp-l" style={{marginBottom:6}}>AI 조정 제안</div>{aiBrief.tips.map((t,i)=><div key={i} style={{padding:10,background:'var(--bg-0)',borderRadius:'var(--r)',marginBottom:4,fontSize:12,color:'var(--t2)',lineHeight:1.5}}>• {t}</div>)}</div>}
+  </div></div>);
+}
+
+// ── Scenario ──
+function Scenario({pf}){
+  const [sel,setSel]=useState(pf[0]?.ticker||'');
+  const p=pf.find(x=>x.ticker===sel);if(!p)return null;
+  const best={price:p.cur*1.25,prob:25,cat:'실적 서프라이즈, 섹터 호황, 기관 매수',act:'핵심 보유, 목표 초과 시 부분 익절'};
+  const base={price:p.cur*1.08,prob:50,cat:'안정적 성장, 시장 수익률 수준',act:'현재 포지션 유지'};
+  const worst={price:p.cur*.82,prob:25,cat:'시장 조정, 섹터 로테이션, 가이던스 하향',act:'손절 실행, 최소 비중 축소'};
+  return(<div className="fade-up"><div className="card">
+    <div className="card-t"><span>시나리오 분석</span><div style={{display:'flex',gap:4}}>{pf.map(x=><button key={x.ticker} className={`btn btn-s ${sel===x.ticker?'btn-p':''}`} onClick={()=>setSel(x.ticker)}>{x.ticker}</button>)}</div></div>
+    <div style={{textAlign:'center',marginBottom:16}}><span style={{fontSize:17,fontWeight:700,fontFamily:'var(--mono)'}}>{sel}</span><span style={{fontFamily:'var(--mono)',marginLeft:10}}>{fd(p.cur)}</span></div>
+    <div className="g3">
+      {[{d:best,c:'scen-best',cl:'var(--green)',lb:'▲ 최선'},{d:base,c:'scen-base',cl:'var(--blue)',lb:'◆ 기본'},{d:worst,c:'scen-worst',cl:'var(--red)',lb:'▼ 최악'}].map(({d,c,cl,lb})=>
+        <div key={lb} className={`scen ${c}`}><div style={{fontSize:10,fontFamily:'var(--mono)',color:cl,fontWeight:600,marginBottom:10}}>{lb}</div>
+          <div style={{fontSize:20,fontWeight:700,fontFamily:'var(--mono)',color:cl,marginBottom:2}}>{fd(d.price)}</div>
+          <div style={{fontSize:11,color:cl,fontFamily:'var(--mono)',marginBottom:10}}>{fp((d.price-p.cur)/p.cur*100)}</div>
+          <div style={{fontSize:10,color:'var(--t3)',fontFamily:'var(--mono)',marginBottom:4}}>확률: {d.prob}%</div>
+          <div className="divider"/>
+          <div style={{fontSize:11,color:'var(--t2)',lineHeight:1.5,marginBottom:6}}><strong>촉매:</strong> {d.cat}</div>
+          <div style={{fontSize:11,color:cl,fontWeight:500}}>대응: {d.act}</div>
+        </div>)}
+    </div>
+  </div></div>);
+}
+
+// ── Decision ──
+function Decision({pf,aiStrats,aiSent}){
+  return(<div className="fade-up"><div className="g2">{pf.map(p=>{
+    const ai=aiStrats[p.ticker];const sent=aiSent[p.ticker];
+    const pp=(p.cur-p.avg)/p.avg*100;
+    const act=ai?.action||(pp>50?'PARTIAL SELL':pp<-10?'ADD':'HOLD');
+    const conf=ai?.confidence||(pp>30?78:pp<-10?65:70);
+    const riskLv=conf>75?'낮음':conf>60?'보통':'높음';
+    const sn=sent?.sentiment||'Neutral';
+    const bc=act.includes('SELL')?'dec-sell':act==='ADD'?'dec-add':'dec-hold';
+    const badgeC=act.includes('SELL')?'b-sell':act==='ADD'?'b-add':'b-hold';
+    return(<div key={p.ticker} className={`dec-card ${bc}`}>
+      <div style={{display:'flex',justifyContent:'space-between',marginBottom:14}}>
+        <div><div style={{fontSize:18,fontWeight:700,fontFamily:'var(--mono)'}}>{p.ticker}</div><div style={{fontSize:13,fontFamily:'var(--mono)',color:'var(--t2)',marginTop:2}}>{fd(p.cur)}</div></div>
+        <span className={`badge ${badgeC}`} style={{fontSize:12,padding:'5px 12px',height:'fit-content'}}>{act}</span>
+      </div>
+      <div className="g3" style={{marginBottom:14}}>
+        <div><div className="stat-l">신뢰도</div><div style={{fontFamily:'var(--mono)',fontWeight:700,fontSize:16,color:conf>75?'var(--green)':conf>60?'var(--amber)':'var(--red)'}}>{conf}%</div></div>
+        <div><div className="stat-l">위험</div><span className={`badge ${riskLv==='낮음'?'b-buy':riskLv==='보통'?'b-hold':'b-sell'}`} style={{marginTop:3}}>{riskLv}</span></div>
+        <div><div className="stat-l">감성</div><span className={`badge ${sn==='Bullish'?'b-bull':sn==='Bearish'?'b-bear':'b-neut'}`} style={{marginTop:3}}>{sn==='Bullish'?'강세':sn==='Bearish'?'약세':'중립'}</span></div>
+      </div>
+      {ai?.reason&&<><div className="divider"/><div style={{fontSize:11,color:'var(--t2)',lineHeight:1.6,marginTop:8}}><strong style={{color:'var(--t1)'}}>전략:</strong> {ai.reason}</div></>}
+    </div>)})}</div></div>);
+}
+
+// ── Config ──
+function Config({keys,logout}){
+  const del=()=>{if(confirm('키 삭제 및 로그아웃?')){localStorage.removeItem('aa_keys');logout()}};
+  return(<div className="fade-up"><div className="card">
+    <div className="card-t">API 키 관리</div>
+    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',padding:'8px 10px',background:'var(--bg-0)',borderRadius:'var(--r)',fontSize:12}}>
+        <span style={{color:'var(--t3)'}}>Finnhub (주가/뉴스)</span><span style={{fontFamily:'var(--mono)',color:keys.fh?'var(--green)':'var(--t3)'}}>{keys.fh?'••••'+keys.fh.slice(-4):keys.demo?'데모':'미설정'}</span></div>
+      <div style={{display:'flex',justifyContent:'space-between',padding:'8px 10px',background:'var(--bg-0)',borderRadius:'var(--r)',fontSize:12}}>
+        <span style={{color:'var(--t3)'}}>Claude (AI 분석)</span><span style={{fontFamily:'var(--mono)',color:keys.cl?'var(--green)':'var(--t3)'}}>{keys.cl?'••••'+keys.cl.slice(-4):keys.demo?'데모':'미설정'}</span></div>
+      <button className="btn btn-d" style={{marginTop:6}} onClick={del}>키 삭제 및 로그아웃</button>
+    </div>
+  </div></div>);
+}
+
+// ── Main App ──
+// ── Trade History Tab ──
+function TradeHistory({history}){
+  if(!history||history.length===0)return(<div className="fade-up"><div className="card"><div className="card-t">매매 기록</div>
+    <div style={{textAlign:'center',padding:'40px 20px',color:'var(--t3)'}}><div style={{fontSize:28,marginBottom:8,opacity:.4}}>📋</div><div style={{fontSize:12}}>청산 기록이 없습니다</div></div></div></div>);
+  const totalPnl=history.reduce((s,h)=>s+h.pnl,0);
+  const wins=history.filter(h=>h.pnl>=0).length;
+  const winRate=history.length>0?(wins/history.length*100):0;
+  return(<div className="fade-up">
+    <div className="g3" style={{marginBottom:12}}>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">총 실현손익</div><div className={`stat-v ${totalPnl>=0?'up':'dn'}`}>{fd(totalPnl)}</div></div>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">승률</div><div className="stat-v">{f(winRate,1)}%</div><div style={{fontSize:10,color:'var(--t3)'}}>{wins}승 / {history.length-wins}패</div></div>
+      <div className="stat" style={{textAlign:'center'}}><div className="stat-l">총 거래</div><div className="stat-v">{history.length}</div></div>
+    </div>
+    <div className="card"><div className="card-t">청산 내역</div>
+      <div style={{overflowX:'auto'}}><table className="tbl"><thead><tr><th>일시</th><th>티커</th><th>수량</th><th>매수가</th><th>청산가</th><th>손익</th><th>수익률</th></tr></thead>
+      <tbody>{history.slice().reverse().map((h,i)=>{const pp=(h.sellPrice-h.avg)/h.avg*100;
+        return(<tr key={i}><td style={{color:'var(--t2)',fontSize:11}}>{h.date}</td><td style={{fontWeight:600}}>{h.ticker}</td><td>{h.qty}</td><td>{fd(h.avg)}</td><td>{fd(h.sellPrice)}</td>
+          <td className={h.pnl>=0?'up':'dn'}>{fd(h.pnl)}</td><td className={pp>=0?'up':'dn'}>{fp(pp)}</td></tr>)})}</tbody></table></div>
+    </div>
+  </div>);
+}
+
+function App(){
+  // localStorage에서 모든 데이터 복원
+  const [keys,setKeys]=useState(()=>{try{const s=localStorage.getItem('aa_keys');return s?JSON.parse(s):null}catch{return null}});
+  const [tab,setTab]=useState('dash');
+  const [pf,setPf]=useState(()=>{try{const s=localStorage.getItem('aa_pf');return s?JSON.parse(s):[]}catch{return[]}});
+  const [tradeHist,setTradeHist]=useState(()=>{try{const s=localStorage.getItem('aa_trades');return s?JSON.parse(s):[]}catch{return[]}});
+  const [chatMsgs,setChatMsgs]=useState(()=>{try{const s=localStorage.getItem('aa_chat');return s?JSON.parse(s):[{role:'a',text:'안녕하세요! Andrea Alpha AI입니다. 포트폴리오에 대해 무엇이든 물어보세요.\n\n예시:\n• "NVDA 지금 팔아야 할까?"\n• "포트폴리오 리밸런싱 해줘"\n• "반도체 섹터 전망은?"'}]}catch{return[{role:'a',text:'안녕하세요! Andrea Alpha AI입니다.'}]}});
+  const [addOpen,setAddOpen]=useState(false);
+  const [loading,setLoading]=useState(false);
+  const [rfing,setRfing]=useState(false);
+  const [time,setTime]=useState(new Date());
+  const [lastRf,setLastRf]=useState(null);
+  const [chatOpen,setChatOpen]=useState(true);
+  const [aiStrats,setAiStrats]=useState(()=>{try{const s=localStorage.getItem('aa_strats');return s?JSON.parse(s):{}}catch{return{}}});
+  const [aiSent,setAiSent]=useState(()=>{try{const s=localStorage.getItem('aa_sent');return s?JSON.parse(s):{}}catch{return{}}});
+  const [aiOpps,setAiOpps]=useState(()=>{try{const s=localStorage.getItem('aa_opps');return s?JSON.parse(s):null}catch{return null}});
+  const [aiBrief,setAiBrief]=useState(()=>{try{const s=localStorage.getItem('aa_brief');return s?JSON.parse(s):null}catch{return null}});
+  const [aiLoad,setAiLoad]=useState({});
+
+  // 데이터 변경 시 자동 저장
+  useEffect(()=>{if(pf.length>0||localStorage.getItem('aa_pf'))localStorage.setItem('aa_pf',JSON.stringify(pf))},[pf]);
+  useEffect(()=>{localStorage.setItem('aa_trades',JSON.stringify(tradeHist))},[tradeHist]);
+  useEffect(()=>{if(chatMsgs.length>1)localStorage.setItem('aa_chat',JSON.stringify(chatMsgs.slice(-50)))},[chatMsgs]);
+  useEffect(()=>{if(Object.keys(aiStrats).length>0)localStorage.setItem('aa_strats',JSON.stringify(aiStrats))},[aiStrats]);
+  useEffect(()=>{if(Object.keys(aiSent).length>0)localStorage.setItem('aa_sent',JSON.stringify(aiSent))},[aiSent]);
+  useEffect(()=>{if(aiOpps)localStorage.setItem('aa_opps',JSON.stringify(aiOpps))},[aiOpps]);
+  useEffect(()=>{if(aiBrief)localStorage.setItem('aa_brief',JSON.stringify(aiBrief))},[aiBrief]);
+
+  useEffect(()=>{const i=setInterval(()=>setTime(new Date()),1000);return()=>clearInterval(i)},[]);
+
+  const refresh=async()=>{
+    if(!keys||keys.demo||!keys.fh||rfing)return;setRfing(true);
+    const tks=pf.map(p=>p.ticker);const qs=await API.quotes(tks,keys.fh);
+    setPf(prev=>prev.map(p=>{const q=qs[p.ticker];if(q)return{...p,cur:q.cur,pc:q.pc,h:q.h,l:q.l,o:q.o,dp:q.dp||0,d:q.d||0};return p}));
+    setLastRf(new Date());setRfing(false)};
+
+  const analyze=async(tk)=>{if(!keys?.cl)return;setAiLoad(p=>({...p,[tk]:true}));const pos=pf.find(p=>p.ticker===tk);if(pos){const r=await API.strategy(pos,keys.cl);if(r)setAiStrats(p=>({...p,[tk]:r}))}setAiLoad(p=>({...p,[tk]:false}))};
+  const analyzeSent=async(tk)=>{if(!keys?.fh||!keys?.cl)return;setAiLoad(p=>({...p,[`s_${tk}`]:true}));const news=await API.news(tk,keys.fh);if(news.length>0){const r=await API.sentimentAI(tk,news,keys.cl);if(r){r.headlines=news.slice(0,5).map(n=>n.headline);setAiSent(p=>({...p,[tk]:r}))}}setAiLoad(p=>({...p,[`s_${tk}`]:false}))};
+  const scan=async()=>{if(!keys?.cl)return;setAiLoad(p=>({...p,scanner:true}));const r=await API.scanAI(keys.cl);if(r)setAiOpps(r);setAiLoad(p=>({...p,scanner:false}))};
+  const genBrief=async()=>{if(!keys?.cl||pf.length===0)return;setAiLoad(p=>({...p,brief:true}));const r=await API.briefAI(pf,keys.cl);if(r)setAiBrief(r);setAiLoad(p=>({...p,brief:false}))};
+
+  const submit=(k)=>{setLoading(true);setKeys(k);localStorage.setItem('aa_keys',JSON.stringify(k));
+    if(k.demo){setTimeout(()=>{if(pf.length===0)setPf(DEMO);setLoading(false)},1000)}
+    else{setTimeout(()=>{setLoading(false)},600)}};
+
+  const addPos=(p)=>setPf(prev=>[...prev,p]);
+
+  // 청산 시 매매 기록에 추가
+  const rmPos=(tk)=>{
+    const pos=pf.find(p=>p.ticker===tk);
+    if(!pos)return;
+    const pnl=(pos.cur-pos.avg)*pos.qty;
+    const pp=(pos.cur-pos.avg)/pos.avg*100;
+    if(confirm(`${tk} 청산하시겠습니까?\n\n현재가: $${pos.cur}\n매수가: $${pos.avg}\n수량: ${pos.qty}주\n손익: $${pnl.toFixed(2)} (${pp.toFixed(1)}%)`)){
+      const record={ticker:tk,qty:pos.qty,avg:pos.avg,sellPrice:pos.cur,pnl:pnl,date:new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})};
+      setTradeHist(prev=>[...prev,record]);
+      setPf(prev=>prev.filter(p=>p.ticker!==tk));
+    }
+  };
+
+  // 자동 로그인 (키가 저장되어 있으면 바로 진입)
+  if(!keys)return<Setup onSubmit={submit}/>;
+  if(loading)return<div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100vh',gap:14}}><div className="spin" style={{width:32,height:32,borderWidth:3}}/><div style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--t2)',animation:'pulse 1.5s infinite'}}>Andrea Alpha 초기화 중...</div></div>;
+
+  const renderTab=()=>{
+    switch(tab){
+      case'dash':return<Dash pf={pf} setAdd={setAddOpen} remove={rmPos} refresh={refresh} rfing={rfing} lastRf={lastRf} demo={keys.demo}/>;
+      case'monitor':return pf.length?<Monitor pf={pf}/>:<Empty/>;
+      case'strategy':return pf.length?<Strategy pf={pf} aiStrats={aiStrats} analyze={analyze} aiLoad={aiLoad} demo={keys.demo}/>:<Empty/>;
+      case'scan':return<Scanner opps={aiOpps} scan={scan} aiLoad={aiLoad} demo={keys.demo}/>;
+      case'sentiment':return pf.length?<Sentiment pf={pf} aiSent={aiSent} analyze={analyzeSent} aiLoad={aiLoad} demo={keys.demo}/>:<Empty/>;
+      case'risk':return pf.length?<Risk pf={pf}/>:<Empty/>;
+      case'brief':return pf.length?<Brief pf={pf} aiBrief={aiBrief} generate={genBrief} aiLoad={aiLoad} demo={keys.demo}/>:<Empty/>;
+      case'scenario':return pf.length?<Scenario pf={pf}/>:<Empty/>;
+      case'decision':return pf.length?<Decision pf={pf} aiStrats={aiStrats} aiSent={aiSent}/>:<Empty/>;
+      case'trades':return<TradeHistory history={tradeHist}/>;
+      case'config':return<Config keys={keys} logout={()=>{setKeys(null);setPf([]);localStorage.removeItem('aa_keys')}}/>;
+      default:return<Dash pf={pf} setAdd={setAddOpen} remove={rmPos} refresh={refresh} rfing={rfing} lastRf={lastRf} demo={keys.demo}/>}};
+
+  return(
+    <div className={`app ${!chatOpen?'chat-closed':''}`}>
+      <div className="header">
+        <div className="logo"><div className="logo-mark">◆</div>ANDREA ALPHA</div>
+        <div className="h-right">
+          <span><span className="dot"/>{keys.demo?'데모':'실시간'}</span>
+          <span>{time.toLocaleTimeString('en-US',{hour12:false})}</span>
+          <button className={`chat-toggle ${chatOpen?'active':''}`} onClick={()=>setChatOpen(!chatOpen)}>🤖 AI {chatOpen?'닫기':'열기'}</button>
+        </div>
+      </div>
+
+      <div style={{display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <div className="nav">{TABS.map(t=><button key={t.id} className={`nav-btn ${tab===t.id?'on':''}`} onClick={()=>setTab(t.id)}>{t.l}</button>)}</div>
+        <div className="main">{renderTab()}</div>
+      </div>
+
+      {chatOpen&&<ChatPanel keys={keys} portfolio={pf} onClose={()=>setChatOpen(false)} savedMsgs={chatMsgs} onMsgsChange={setChatMsgs}/>}
+      {addOpen&&<AddModal onAdd={addPos} onClose={()=>setAddOpen(false)} fhKey={keys.demo?null:keys.fh}/>}
+    </div>
+  );
+}
+
+function Empty(){return<div style={{textAlign:'center',padding:'50px 20px',color:'var(--t3)'}}><div style={{fontSize:32,marginBottom:10,opacity:.4}}>📊</div><div style={{fontSize:13}}>종목을 먼저 추가하세요</div></div>}
+
+ReactDOM.render(<App/>,document.getElementById('root'));
+</script>
+</body>
+</html>
